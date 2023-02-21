@@ -1,0 +1,54 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: db
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=wordpress
+      - MYSQL_ROOT_PASSWORD=123
+    #networks:
+    #  - app-network
+    
+
+  wordpress:
+    depends_on:
+      - db
+    image: wordpress:5.1.1-fpm-alpine
+    container_name: wordpress
+    restart: unless-stopped
+    volumes:
+      - wordpress:/var/www/html:rw
+    environment:
+      - MYSQL_DATABASE=wordpress
+      - MYSQL_ROOT_PASSWORD=123
+      - MYSQL_DB_HOST=db:3306
+    #networks:
+     # - app-network
+    links:
+      - db
+      
+
+  webserver:
+    depends_on:
+      - wordpress
+    image: nginx:1.15.12-alpine
+    container_name: webserver
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - wordpress:/var/www/html:rw
+      - ./nginx-conf:/etc/nginx/conf.d
+    #networks:
+     # - app-network
+    links:
+      - wordpress
+
+volumes:
+  wordpress:
+
+#networks:
+ # app-network:
+ #   driver: bridge  
