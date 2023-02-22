@@ -1,33 +1,47 @@
-version: '3'
+version: '3.7'
 
 services:
   db:
-    image: mysql:8.0
-    container_name: db
-    restart: unless-stopped
+    image: mariadb:10.6.4-focal
+    command: '--default-authentication-plugin=mysql_native_password'
+    volumes:
+      - ./db:/var/lib/mysql:delegated
+    restart: always
+    read_only: false
     environment:
-      - MYSQL_DATABASE=wordpress
       - MYSQL_ROOT_PASSWORD=123
-    #networks:
-    #  - app-network
+      - MYSQL_DATABASE=wordpress
+      - MYSQL_USER=wordpress
+      - MYSQL_PASSWORD=123
+    expose:
+      - 3306
+      - 33060
     
 
   wordpress:
     depends_on:
       - db
-    image: wordpress:5.1.1-fpm-alpine
+    image: wordpress:latest
     container_name: wordpress
     restart: unless-stopped
     volumes:
       - wordpress:/var/www/html:rw
+    #ports:
+    #  - 80:80
     environment:
-      - MYSQL_DATABASE=wordpress
-      - MYSQL_ROOT_PASSWORD=123
-      - MYSQL_DB_HOST=db:3306
+      - WORDPRESS_DB_HOST=db
+      - WORDPRESS_DB_USER=wordpress
+      - WORDPRESS_DB_PASSWORD=123
+      - WORDPRESS_DB_NAME=wordpress
+    volumes:
+    #  - ./wp-content/uploads:/var/www/html/wp-content/uploads
+    #  - ./wp-content/plugins:/var/www/html/wp-content/plugins
+    #  - ./wp-content/themes:/var/www/html/wp-content/themes
+      - ./uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
     #networks:
      # - app-network
-    links:
-      - db
+    #links:
+    #  - db
       
 
   webserver:
@@ -37,17 +51,19 @@ services:
     container_name: webserver
     restart: unless-stopped
     ports:
-      - "80:80"
+      - 80:80
     volumes:
       - wordpress:/var/www/html:rw
       - ./nginx-conf:/etc/nginx/conf.d
     #networks:
-     # - app-network
-    links:
-      - wordpress
+    #  - app-network
+    #links:
+      #- wordpress
 
 volumes:
   wordpress:
+  db:
+  webserver:
 
 #networks:
  # app-network:

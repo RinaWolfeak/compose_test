@@ -1,1 +1,5 @@
 __pycache__
+db
+nginx-conf
+uploads.ini
+wp-content
